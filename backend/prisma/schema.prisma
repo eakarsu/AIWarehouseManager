@@ -1,0 +1,456 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String
+  name            String
+  role            String    @default("user") // user, editor, admin
+  emailVerified   Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  floorPlans          FloorPlan[]
+  designs             Design[]
+  aiGenerations       AIGeneration[]
+  arSessions          ARSession[]
+  subscription        Subscription?
+  shoppingLists       ShoppingList[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ==================== FLOOR PLAN ANALYZER MODELS ====================
+
+model FloorPlan {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  imageUrl    String?
+  imageData   String?  // base64
+  totalArea   Float?
+  status      String   @default("pending") // pending, in_progress, analyzed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rooms               FloorPlanRoom[]
+  renovationSuggestions RenovationSuggestion[]
+  projectEstimates    ProjectEstimate[]
+  fullAnalyses        FullAnalysis[]
+  roomDetections      RoomDetection[]
+  maintenancePredictions MaintenancePrediction[]
+  energyAudits        EnergyAudit[]
+  homeInspections     HomeInspection[]
+  layoutOptimizations LayoutOptimization[]
+  aiAnalyses          AIAnalysis[]
+}
+
+model FloorPlanRoom {
+  id          String  @id @default(uuid())
+  floorPlanId String
+  floorPlan   FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  name        String
+  roomType    String
+  width       Float?
+  length      Float?
+  height      Float?
+  area        Float?
+  positionX   Float?
+  positionY   Float?
+  features    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  renovationSuggestions RenovationSuggestion[]
+  homeStagings         HomeStaging[]
+  furniturePlacements  FurniturePlacement[]
+  roomDimensions       RoomDimension[]
+}
+
+model RenovationSuggestion {
+  id            String  @id @default(uuid())
+  floorPlanId   String
+  floorPlan     FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  roomId        String?
+  room          FloorPlanRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  title         String
+  description   String
+  category      String?
+  priority      String?   @default("medium")
+  estimatedCost Float?
+  difficulty    String?
+  timeline      String?
+  status        String    @default("pending")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model ProjectEstimate {
+  id            String  @id @default(uuid())
+  floorPlanId   String
+  floorPlan     FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  laborCost     Float?
+  materialCost  Float?
+  totalCost     Float?
+  timelineDays  Int?
+  status        String  @default("draft")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model FullAnalysis {
+  id                  String  @id @default(uuid())
+  floorPlanId         String
+  floorPlan           FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  roomIdentification  String?
+  layoutAnalysis      String?
+  spaceUtilization    String?
+  naturalLight        String?
+  renovationPotential String?
+  fullResult          Json?
+  modelUsed           String?
+  createdAt           DateTime @default(now())
+}
+
+model RoomDimension {
+  id         String  @id @default(uuid())
+  roomId     String
+  room       FloorPlanRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  dimensions Json?
+  features   String?
+  modelUsed  String?
+  createdAt  DateTime @default(now())
+}
+
+model RoomDetection {
+  id              String  @id @default(uuid())
+  floorPlanId     String
+  floorPlan       FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  detectedRooms   Json?
+  totalRooms      Int?
+  confidenceScore Float?
+  modelUsed       String?
+  createdAt       DateTime @default(now())
+}
+
+model HomeStaging {
+  id                    String  @id @default(uuid())
+  roomId                String
+  room                  FloorPlanRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  stagingStyle          String?
+  recommendations       Json?
+  targetBuyer           String?
+  estimatedValueIncrease Float?
+  modelUsed             String?
+  createdAt             DateTime @default(now())
+}
+
+model FurniturePlacement {
+  id                String  @id @default(uuid())
+  roomId            String
+  room              FloorPlanRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  furnitureItems    Json?
+  layoutScore       Float?
+  trafficFlowRating Float?
+  modelUsed         String?
+  createdAt         DateTime @default(now())
+}
+
+model MaintenancePrediction {
+  id                  String  @id @default(uuid())
+  floorPlanId         String
+  floorPlan           FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  predictions         Json?
+  totalAnnualCost     Float?
+  priorityItems       Json?
+  nextMaintenanceDate DateTime?
+  modelUsed           String?
+  createdAt           DateTime @default(now())
+}
+
+model EnergyAudit {
+  id                String  @id @default(uuid())
+  floorPlanId       String
+  floorPlan         FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  efficiencyScore   Float?
+  annualCostEstimate Float?
+  potentialSavings  Float?
+  recommendations   Json?
+  carbonFootprint   Float?
+  modelUsed         String?
+  createdAt         DateTime @default(now())
+}
+
+model HomeInspection {
+  id                 String  @id @default(uuid())
+  floorPlanId        String
+  floorPlan          FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  inspectionType     String?
+  overallCondition   String?
+  issuesFound        Json?
+  criticalIssues     Int?
+  estimatedRepairCost Float?
+  modelUsed          String?
+  createdAt          DateTime @default(now())
+}
+
+model LayoutOptimization {
+  id                    String  @id @default(uuid())
+  floorPlanId           String
+  floorPlan             FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  trafficFlow           String?
+  efficiencyScore       Float?
+  naturalLight          String?
+  privacyAnalysis       String?
+  noiseZones            String?
+  furnitureSuggestions   String?
+  fullResult            Json?
+  modelUsed             String?
+  createdAt             DateTime @default(now())
+}
+
+model AIAnalysis {
+  id              String  @id @default(uuid())
+  floorPlanId     String
+  floorPlan       FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  analysisType    String
+  result          Json?
+  modelUsed       String?
+  tokensUsed      Int?
+  processingTimeMs Int?
+  createdAt       DateTime @default(now())
+}
+
+// ==================== INTERIOR DESIGN MODELS ====================
+
+model Design {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  style       String?
+  roomType    String?
+  status      String   @default("draft")
+  budget      Float?
+  imageUrl    String?
+  beforeImage String?
+  afterImage  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rooms         DesignRoom[]
+  shoppingLists ShoppingList[]
+}
+
+model DesignRoom {
+  id        String   @id @default(uuid())
+  designId  String
+  design    Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+  name      String
+  width     Float?
+  length    Float?
+  height    Float?
+  style     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  furniture Furniture[]
+}
+
+model Furniture {
+  id          String  @id @default(uuid())
+  name        String
+  category    String?
+  style       String?
+  description String?
+  price       Float?
+  imageUrl    String?
+  storeUrl    String?
+  storeName   String?
+  modelUrl    String?  // 3D model URL (GLB/GLTF)
+  arReady     Boolean @default(false)
+  dimensions  Json?
+  roomId      String?
+  room        DesignRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ColorPalette {
+  id        String   @id @default(uuid())
+  name      String
+  colors    Json     // Array of color objects
+  style     String?
+  mood      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StylePreset {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  style       String
+  roomType    String?
+  features    Json?
+  colorPalette Json?
+  imageUrl    String?
+  popularity  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AIGeneration {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           String   // design, palette, furniture, room-analysis, style-guide, budget, transformation, image
+  prompt         String?
+  result         Json?
+  imageUrl       String?
+  modelUsed      String?
+  tokensUsed     Int?
+  cost           Float?
+  processingTimeMs Int?
+  createdAt      DateTime @default(now())
+}
+
+model ARSession {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  roomWidth    Float?
+  roomLength   Float?
+  roomHeight   Float?
+  furniture    Json?    // Array of placed furniture
+  snapshot     String?  // Base64 snapshot
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Subscription {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan         String   @default("free") // free, pro, enterprise
+  status       String   @default("active")
+  creditsUsed  Int      @default(0)
+  creditsLimit Int      @default(5)
+  startDate    DateTime @default(now())
+  endDate      DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ShoppingList {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  designId  String?
+  design    Design?  @relation(fields: [designId], references: [id], onDelete: SetNull)
+  name      String
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items ShoppingListItem[]
+}
+
+model ShoppingListItem {
+  id             String   @id @default(uuid())
+  shoppingListId String
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  name           String
+  category       String?
+  price          Float?
+  quantity       Int      @default(1)
+  purchased      Boolean  @default(false)
+  storeUrl       String?
+  storeName      String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ==================== SHARED MODELS ====================
+
+model Material {
+  id          String  @id @default(uuid())
+  name        String
+  category    String?
+  description String?
+  unitPrice   Float?
+  unit        String?
+  supplier    String?
+  inStock     Boolean @default(true)
+  imageUrl    String?
+  texture     String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Contractor {
+  id          String  @id @default(uuid())
+  name        String
+  company     String?
+  specialty   String?
+  email       String?
+  phone       String?
+  rating      Float?
+  hourlyRate  Float?
+  availability String?
+  location    String?
+  verified    Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DesignTemplate {
+  id          String  @id @default(uuid())
+  name        String
+  style       String?
+  roomType    String?
+  features    Json?
+  colorPalette Json?
+  imageUrl    String?
+  popularity  Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inspiration {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  style       String?
+  roomType    String?
+  tags        Json?
+  likes       Int      @default(0)
+  source      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
