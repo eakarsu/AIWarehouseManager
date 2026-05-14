@@ -190,6 +190,9 @@ export const placeFurniture = (data) => api.post('/ai/furniture-placement', data
 export const predictMaintenance = (data) => api.post('/ai/maintenance-prediction', data);
 export const auditEnergy = (data) => api.post('/ai/energy-audit', data);
 export const inspectHome = (data) => api.post('/ai/home-inspection', data);
+// Apply pass 4 — mechanical backlog AI endpoints
+export const predictMaterialWear = (data) => api.post('/ai/material-wear-prediction', data);
+export const matchContractor = (data) => api.post('/ai/contractor-match', data);
 
 // ============================================================
 // AI Design (from AiInteriorDesign)

@@ -5,7 +5,44 @@ const sharp = require('sharp');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { auth, optionalAuth, adminOnly } = require('../middleware/auth');
-const { callOpenRouter } = require('../services/openrouter');
+const { callOpenRouter, callOpenRouterWithRetry } = require('../services/openrouter');
+
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5';
+
+// Apply pass 4: small wrapper used by mechanical backlog endpoints.
+// Throws an AIKeyMissingError when OPENROUTER_API_KEY is unset so handlers
+// can return 503 instead of bubbling up a 500.
+class AIKeyMissingError extends Error {
+  constructor() {
+    super('AI not configured: OPENROUTER_API_KEY is missing');
+    this.code = 'AI_KEY_MISSING';
+  }
+}
+
+async function runChat(systemPrompt, userPrompt, { temperature = 0.5, maxTokens = 4000 } = {}) {
+  if (!process.env.OPENROUTER_API_KEY) throw new AIKeyMissingError();
+  const data = await callOpenRouterWithRetry({
+    model: OPENROUTER_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    max_tokens: maxTokens,
+    temperature,
+  });
+  const content = data?.choices?.[0]?.message?.content || '';
+  return { content, model: data?.model, usage: data?.usage };
+}
+
+function tryParseJson(text) {
+  if (!text) return null;
+  const cleaned = String(text).replace(/```(?:json)?/gi, '').replace(/```/g, '');
+  const objMatch = cleaned.match(/\{[\s\S]*\}/);
+  const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+  const candidate = objMatch ? objMatch[0] : (arrMatch ? arrMatch[0] : null);
+  if (!candidate) return null;
+  try { return JSON.parse(candidate); } catch { return null; }
+}
 
 // Multer setup
 const storage = multer.memoryStorage();
@@ -569,6 +606,168 @@ router.get('/history', auth, async (req, res) => {
   } catch (error) {
     console.error('Get AI history error:', error);
     res.status(500).json({ error: 'Failed to get AI history' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Apply pass 4 — mechanical backlog endpoints
+// ---------------------------------------------------------------------------
+
+// POST /api/ai/material-wear-prediction
+// Predicts wear/failure timeline for a list of materials in a given environment.
+// Body: { materials: string|string[], environment?, usage_intensity?, climate?, notes? }
+router.post('/material-wear-prediction', auth, async (req, res) => {
+  try {
+    let { materials, environment, usage_intensity, climate, notes } = req.body || {};
+    if (!materials) return res.status(400).json({ error: 'materials is required (array or comma-separated string)' });
+    if (typeof materials === 'string') {
+      materials = materials.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(materials) || materials.length === 0) {
+      return res.status(400).json({ error: 'materials must be a non-empty list' });
+    }
+
+    const systemPrompt = 'You are a materials science expert with deep knowledge of building/interior material lifecycles, wear mechanisms, and maintenance economics. Always reply in valid JSON.';
+    const userPrompt = `Predict wear and replacement timelines for the following materials.
+
+ENVIRONMENT: ${environment || 'typical residential interior'}
+USAGE INTENSITY: ${usage_intensity || 'normal household'}
+CLIMATE: ${climate || 'temperate'}
+ADDITIONAL NOTES: ${notes || 'none'}
+
+MATERIALS:
+${materials.map((m, i) => `${i + 1}. ${m}`).join('\n')}
+
+Return ONLY valid JSON of this shape:
+{
+  "predictions": [
+    {
+      "material": "<input material>",
+      "expected_lifespan_years": <number>,
+      "wear_drivers": ["<string>"],
+      "early_warning_signs": ["<string>"],
+      "preventive_maintenance": ["<string>"],
+      "replacement_cost_estimate_usd": "<low-high range string>",
+      "risk_level": "<low|medium|high>"
+    }
+  ],
+  "overall_recommendations": ["<string>"]
+}
+No markdown, JSON only.`;
+
+    const ai = await runChat(systemPrompt, userPrompt, { temperature: 0.4, maxTokens: 3000 });
+    const parsed = tryParseJson(ai.content);
+
+    res.json({
+      type: 'material-wear-prediction',
+      input: { materials, environment, usage_intensity, climate },
+      result: parsed,
+      raw: parsed ? null : ai.content,
+      model: ai.model,
+      generated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    if (err.code === 'AI_KEY_MISSING') {
+      return res.status(503).json({ error: err.message });
+    }
+    console.error('material-wear-prediction error:', err.message);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// POST /api/ai/contractor-match
+// Ranks contractors against a job description / required skills.
+// Body: { job_description, required_skills?: string|string[], budget?, timeline?, location?, contractor_ids?: string[] }
+router.post('/contractor-match', auth, async (req, res) => {
+  try {
+    let { job_description, required_skills, budget, timeline, location, contractor_ids } = req.body || {};
+    if (!job_description || typeof job_description !== 'string' || job_description.trim().length < 5) {
+      return res.status(400).json({ error: 'job_description is required (min 5 chars)' });
+    }
+    if (typeof required_skills === 'string') {
+      required_skills = required_skills.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    // Pull a candidate pool — limit to 25 to keep prompt size sane.
+    const where = {};
+    if (Array.isArray(contractor_ids) && contractor_ids.length > 0) {
+      where.id = { in: contractor_ids };
+    }
+    const contractors = await prisma.contractor.findMany({
+      where,
+      orderBy: { rating: 'desc' },
+      take: Array.isArray(contractor_ids) && contractor_ids.length > 0 ? contractor_ids.length : 25,
+    }).catch((e) => {
+      console.error('contractor-match: failed to load contractors', e.message);
+      return [];
+    });
+
+    if (contractors.length === 0) {
+      return res.status(404).json({ error: 'No contractors found to match against. Add contractors first or pass contractor_ids.' });
+    }
+
+    const safePool = contractors.map(c => ({
+      id: c.id,
+      name: c.name,
+      company: c.company,
+      specialty: c.specialty,
+      rating: c.rating,
+      hourlyRate: c.hourlyRate,
+      availability: c.availability,
+      location: c.location,
+      verified: c.verified,
+    }));
+
+    const systemPrompt = 'You are an expert construction project manager and contractor matchmaker. Score each candidate on fit to the job and explain reasoning. Always respond in valid JSON.';
+    const userPrompt = `Match contractors to this job.
+
+JOB DESCRIPTION:
+${job_description}
+
+REQUIRED SKILLS: ${(Array.isArray(required_skills) && required_skills.length) ? required_skills.join(', ') : 'derive from description'}
+BUDGET: ${budget || 'not specified'}
+TIMELINE: ${timeline || 'not specified'}
+LOCATION: ${location || 'not specified'}
+
+CANDIDATE POOL (${safePool.length}):
+${JSON.stringify(safePool, null, 2)}
+
+Return ONLY valid JSON of this shape:
+{
+  "ranked_candidates": [
+    {
+      "contractor_id": "<id from pool>",
+      "name": "<name>",
+      "match_score": <0-100>,
+      "strengths": ["<string>"],
+      "concerns": ["<string>"],
+      "estimated_quote_range_usd": "<low-high>",
+      "recommendation": "<short rationale>"
+    }
+  ],
+  "top_pick_id": "<id>",
+  "decision_summary": "<one paragraph>"
+}
+Rank from highest to lowest match_score. No markdown.`;
+
+    const ai = await runChat(systemPrompt, userPrompt, { temperature: 0.3, maxTokens: 3500 });
+    const parsed = tryParseJson(ai.content);
+
+    res.json({
+      type: 'contractor-match',
+      job_description,
+      candidates_considered: safePool.length,
+      result: parsed,
+      raw: parsed ? null : ai.content,
+      model: ai.model,
+      generated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    if (err.code === 'AI_KEY_MISSING') {
+      return res.status(503).json({ error: err.message });
+    }
+    console.error('contractor-match error:', err.message);
+    res.status(500).json({ error: err.message || 'Internal server error' });
   }
 });
 
