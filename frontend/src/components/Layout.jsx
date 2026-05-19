@@ -32,6 +32,7 @@ const sidebarSections = [
       { path: '/ai-suggestions', icon: Lightbulb, label: 'Renovation Suggestions' },
       { path: '/cost-estimate', icon: DollarSign, label: 'Cost Estimates' },
       { path: '/dimensions', icon: BarChart3, label: 'Room Dimensions' },
+      { path: '/ai-material-contractor', icon: Wrench, label: 'Materials & Contractors AI' },
     ],
   },
   {
@@ -53,6 +54,12 @@ const sidebarSections = [
       { path: '/materials', icon: Package, label: 'Materials' },
       { path: '/contractors', icon: Users, label: 'Contractors' },
       { path: '/templates', icon: Layers, label: 'Templates' },
+    ],
+  },
+  {
+    label: 'Analytics',
+    items: [
+      { path: '/custom-views', icon: BarChart3, label: 'Warehouse Analytics' },
     ],
   },
   {

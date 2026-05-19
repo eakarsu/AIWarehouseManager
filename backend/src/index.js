@@ -56,12 +56,22 @@ app.use('/api/energy-audits', require('./routes/energyAudits'));
 app.use('/api/home-inspections', require('./routes/homeInspections'));
 app.use('/api/layout-optimizations', require('./routes/layoutOptimizations'));
 app.use('/api/room-dimensions', require('./routes/roomDimensions'));
+// Apply pass 5 — backlog extensions (timelines, invoices, AR manifest, smart-home, collab, design-trends)
+app.use('/api', require('./routes/extensions'));
+app.use('/api/custom', require('./routes/customFeatures'));
+app.use('/api/custom-views', require('./routes/customViews'));
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// // === Batch 09 Gaps & Frontend Mounts ===
+app.use('/api/gap-ai-aiwarehousemanager', require('./routes/batch09GapAi')); // // === Batch 09 Gaps & Frontend Mounts ===
+app.use('/api/gap-nonai-aiwarehousemanager', require('./routes/batch09GapNonai')); // // === Batch 09 Gaps & Frontend Mounts ===
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+

@@ -37,10 +37,29 @@ import MaterialsPage from './pages/MaterialsPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
+import AIMaterialContractor from './pages/AIMaterialContractor';
+import CustomViewsPage from './pages/CustomViewsPage';
 import Login from './pages/Login';
 
 // API
 import * as api from './services/api';
+
+// // === Batch 09 Gaps & Frontend Mounts ===
+const MultiModalVisionAnalyzeFloorplanPhotosMeasurementsSimCfs = React.lazy(() => import('./pages/Batch09/MultiModalVisionAnalyzeFloorplanPhotosMeasurementsSimCfs'));
+const ArPreviewWithLiveFurniturePriceAvailabilityIntegratioCfs = React.lazy(() => import('./pages/Batch09/ArPreviewWithLiveFurniturePriceAvailabilityIntegratioCfs'));
+const RealTimeCollaborativeDesignCanvasWithMultiUserEditsCfs = React.lazy(() => import('./pages/Batch09/RealTimeCollaborativeDesignCanvasWithMultiUserEditsCfs'));
+const ContractorMarketplaceWithAiSkillMatchingAndReputationCfs = React.lazy(() => import('./pages/Batch09/ContractorMarketplaceWithAiSkillMatchingAndReputationCfs'));
+const HistoricalDesignTrendAnalysisAcrossClientPortfolioCfs = React.lazy(() => import('./pages/Batch09/HistoricalDesignTrendAnalysisAcrossClientPortfolioCfs'));
+const IntegrationWithSmartHomeSystemsLightingPlacementHvacCfs = React.lazy(() => import('./pages/Batch09/IntegrationWithSmartHomeSystemsLightingPlacementHvacCfs'));
+const PredictiveMaterialWearAndLifespanModelingGapAi = React.lazy(() => import('./pages/Batch09/PredictiveMaterialWearAndLifespanModelingGapAi'));
+const ContractorMatchingAiBasedOnSkillGeographyAndProjectGapAi = React.lazy(() => import('./pages/Batch09/ContractorMatchingAiBasedOnSkillGeographyAndProjectGapAi'));
+const AiClientPreferenceLearningFromPastDesignChoicesGapAi = React.lazy(() => import('./pages/Batch09/AiClientPreferenceLearningFromPastDesignChoicesGapAi'));
+const GenerativeVariantExplorationAlternateLayoutsInSecondsGapAi = React.lazy(() => import('./pages/Batch09/GenerativeVariantExplorationAlternateLayoutsInSecondsGapAi'));
+const InvoicepaymentTrackingAndMilestoneBillingGapNon = React.lazy(() => import('./pages/Batch09/InvoicepaymentTrackingAndMilestoneBillingGapNon'));
+const ClientCommunicationPortalMessagingThreadGapNon = React.lazy(() => import('./pages/Batch09/ClientCommunicationPortalMessagingThreadGapNon'));
+const ProjectTimelineGanttTrackingWithDependenciesGapNon = React.lazy(() => import('./pages/Batch09/ProjectTimelineGanttTrackingWithDependenciesGapNon'));
+const BulkImportFromPhotosFolderIngestGapNon = React.lazy(() => import('./pages/Batch09/BulkImportFromPhotosFolderIngestGapNon'));
+const VendorsupplierOrderTrackingIntegratedToShoppingListsGapNon = React.lazy(() => import('./pages/Batch09/VendorsupplierOrderTrackingIntegratedToShoppingListsGapNon'));
 
 function ProtectedRoute({ user, children }) {
   if (!user) {
@@ -396,10 +415,48 @@ function AppRoutes({ user, setUser }) {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/ai-material-contractor"
+        element={
+          <ProtectedRoute user={user}>
+            <Layout user={user} onLogout={handleLogout}>
+              <AIMaterialContractor />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/custom-views"
+        element={
+          <ProtectedRoute user={user}>
+            <Layout user={user} onLogout={handleLogout}>
+              <CustomViewsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* Catch-all: redirect to dashboard or login */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    
+      {/* // === Batch 09 Gaps & Frontend Mounts === */}
+        <Route path="/batch09/cfs/multi-modal-vision-analyze-floorplan-photos-measurements-sim" element={<React.Suspense fallback={<div>Loading...</div>}><MultiModalVisionAnalyzeFloorplanPhotosMeasurementsSimCfs /></React.Suspense>} />
+        <Route path="/batch09/cfs/ar-preview-with-live-furniture-price-availability-integratio" element={<React.Suspense fallback={<div>Loading...</div>}><ArPreviewWithLiveFurniturePriceAvailabilityIntegratioCfs /></React.Suspense>} />
+        <Route path="/batch09/cfs/real-time-collaborative-design-canvas-with-multi-user-edits" element={<React.Suspense fallback={<div>Loading...</div>}><RealTimeCollaborativeDesignCanvasWithMultiUserEditsCfs /></React.Suspense>} />
+        <Route path="/batch09/cfs/contractor-marketplace-with-ai-skill-matching-and-reputation" element={<React.Suspense fallback={<div>Loading...</div>}><ContractorMarketplaceWithAiSkillMatchingAndReputationCfs /></React.Suspense>} />
+        <Route path="/batch09/cfs/historical-design-trend-analysis-across-client-portfolio" element={<React.Suspense fallback={<div>Loading...</div>}><HistoricalDesignTrendAnalysisAcrossClientPortfolioCfs /></React.Suspense>} />
+        <Route path="/batch09/cfs/integration-with-smart-home-systems-lighting-placement-hvac" element={<React.Suspense fallback={<div>Loading...</div>}><IntegrationWithSmartHomeSystemsLightingPlacementHvacCfs /></React.Suspense>} />
+        <Route path="/batch09/gap-ai/predictive-material-wear-and-lifespan-modeling" element={<React.Suspense fallback={<div>Loading...</div>}><PredictiveMaterialWearAndLifespanModelingGapAi /></React.Suspense>} />
+        <Route path="/batch09/gap-ai/contractor-matching-ai-based-on-skill-geography-and-project" element={<React.Suspense fallback={<div>Loading...</div>}><ContractorMatchingAiBasedOnSkillGeographyAndProjectGapAi /></React.Suspense>} />
+        <Route path="/batch09/gap-ai/ai-client-preference-learning-from-past-design-choices" element={<React.Suspense fallback={<div>Loading...</div>}><AiClientPreferenceLearningFromPastDesignChoicesGapAi /></React.Suspense>} />
+        <Route path="/batch09/gap-ai/generative-variant-exploration-alternate-layouts-in-seconds" element={<React.Suspense fallback={<div>Loading...</div>}><GenerativeVariantExplorationAlternateLayoutsInSecondsGapAi /></React.Suspense>} />
+        <Route path="/batch09/gap-nonai/invoicepayment-tracking-and-milestone-billing" element={<React.Suspense fallback={<div>Loading...</div>}><InvoicepaymentTrackingAndMilestoneBillingGapNon /></React.Suspense>} />
+        <Route path="/batch09/gap-nonai/client-communication-portal-messaging-thread" element={<React.Suspense fallback={<div>Loading...</div>}><ClientCommunicationPortalMessagingThreadGapNon /></React.Suspense>} />
+        <Route path="/batch09/gap-nonai/project-timeline-gantt-tracking-with-dependencies" element={<React.Suspense fallback={<div>Loading...</div>}><ProjectTimelineGanttTrackingWithDependenciesGapNon /></React.Suspense>} />
+        <Route path="/batch09/gap-nonai/bulk-import-from-photos-folder-ingest" element={<React.Suspense fallback={<div>Loading...</div>}><BulkImportFromPhotosFolderIngestGapNon /></React.Suspense>} />
+        <Route path="/batch09/gap-nonai/vendorsupplier-order-tracking-integrated-to-shopping-lists" element={<React.Suspense fallback={<div>Loading...</div>}><VendorsupplierOrderTrackingIntegratedToShoppingListsGapNon /></React.Suspense>} />
+
+      </Routes>
   );
 }
 
