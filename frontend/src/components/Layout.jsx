@@ -57,6 +57,12 @@ const sidebarSections = [
     ],
   },
   {
+    label: 'Analytics',
+    items: [
+      { path: '/custom-views', icon: BarChart3, label: 'Warehouse Analytics' },
+    ],
+  },
+  {
     label: 'Account',
     items: [
       { path: '/subscription', icon: CreditCard, label: 'Subscription' },

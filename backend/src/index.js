@@ -59,6 +59,7 @@ app.use('/api/room-dimensions', require('./routes/roomDimensions'));
 // Apply pass 5 — backlog extensions (timelines, invoices, AR manifest, smart-home, collab, design-trends)
 app.use('/api', require('./routes/extensions'));
 app.use('/api/custom', require('./routes/customFeatures'));
+app.use('/api/custom-views', require('./routes/customViews'));
 
 // Health check
 app.get('/api/health', (req, res) => {

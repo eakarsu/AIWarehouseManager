@@ -38,6 +38,7 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
 import AIMaterialContractor from './pages/AIMaterialContractor';
+import CustomViewsPage from './pages/CustomViewsPage';
 import Login from './pages/Login';
 
 // API
@@ -420,6 +421,16 @@ function AppRoutes({ user, setUser }) {
           <ProtectedRoute user={user}>
             <Layout user={user} onLogout={handleLogout}>
               <AIMaterialContractor />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/custom-views"
+        element={
+          <ProtectedRoute user={user}>
+            <Layout user={user} onLogout={handleLogout}>
+              <CustomViewsPage />
             </Layout>
           </ProtectedRoute>
         }
