@@ -60,6 +60,7 @@ const sidebarSections = [
     label: 'Analytics',
     items: [
       { path: '/custom-views', icon: BarChart3, label: 'Warehouse Analytics' },
+      { path: '/bin-replenishment-queue', icon: Package, label: 'Bin Replenishment' },
     ],
   },
   {

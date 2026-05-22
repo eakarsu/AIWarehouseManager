@@ -39,10 +39,14 @@ import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
 import AIMaterialContractor from './pages/AIMaterialContractor';
 import CustomViewsPage from './pages/CustomViewsPage';
+import BinReplenishmentQueue from './pages/BinReplenishmentQueue';
 import Login from './pages/Login';
 
 // API
 import * as api from './services/api';
+
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
 
 // // === Batch 09 Gaps & Frontend Mounts ===
 const MultiModalVisionAnalyzeFloorplanPhotosMeasurementsSimCfs = React.lazy(() => import('./pages/Batch09/MultiModalVisionAnalyzeFloorplanPhotosMeasurementsSimCfs'));
@@ -94,6 +98,9 @@ function AppRoutes({ user, setUser }) {
 
   return (
     <Routes>
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
       {/* Public routes */}
       <Route
         path="/login"
@@ -431,6 +438,16 @@ function AppRoutes({ user, setUser }) {
           <ProtectedRoute user={user}>
             <Layout user={user} onLogout={handleLogout}>
               <CustomViewsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bin-replenishment-queue"
+        element={
+          <ProtectedRoute user={user}>
+            <Layout user={user} onLogout={handleLogout}>
+              <BinReplenishmentQueue />
             </Layout>
           </ProtectedRoute>
         }

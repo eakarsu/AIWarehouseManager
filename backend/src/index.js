@@ -60,6 +60,7 @@ app.use('/api/room-dimensions', require('./routes/roomDimensions'));
 app.use('/api', require('./routes/extensions'));
 app.use('/api/custom', require('./routes/customFeatures'));
 app.use('/api/custom-views', require('./routes/customViews'));
+app.use('/api/bin-replenishment-queue', require('./routes/binReplenishmentQueue'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -73,5 +74,4 @@ app.use('/api/gap-nonai-aiwarehousemanager', require('./routes/batch09GapNonai')
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
 
