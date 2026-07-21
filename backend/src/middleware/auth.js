@@ -9,14 +9,17 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    if (!decoded.id || !decoded.tenantId || !decoded.role || !Array.isArray(decoded.subjectIds)) {
+      return res.status(403).json({ error: 'signed actor, tenant, role, and subject claims required' });
+    }
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    req.user = user;
+    req.user = { ...user, tenantId: decoded.tenantId, subjectIds: decoded.subjectIds };
     req.token = token;
     next();
   } catch (error) {
@@ -28,10 +31,10 @@ const optionalAuth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
       const user = await prisma.user.findUnique({ where: { id: decoded.id } });
       if (user) {
-        req.user = user;
+        req.user = { ...user, tenantId: decoded.tenantId, subjectIds: decoded.subjectIds };
         req.token = token;
       }
     }

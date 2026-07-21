@@ -1,77 +1,70 @@
+'use strict';
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
+const { auth } = require('./middleware/auth');
+const governanceRouter = require('./governance');
+
+for (const name of ['DATABASE_URL', 'GOVERNANCE_TENANT_ID']) {
+  if (!process.env[name]) throw new Error(`${name} is required`);
+}
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters');
+}
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 5000;
+const generatedRoutesEnabled = process.env.ENABLE_GENERATED_FEATURES === 'true' && process.env.NODE_ENV !== 'production';
 
-// Middleware
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
+app.use('/api/auth/login', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 }));
+app.use('/api/auth/register', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 }));
 
-// Rate limiting
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
-app.use('/api/', limiter);
-
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-
-// Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/floor-plans', require('./routes/floorPlans'));
-app.use('/api/floor-plan-rooms', require('./routes/floorPlanRooms'));
-app.use('/api/renovation-suggestions', require('./routes/renovationSuggestions'));
-app.use('/api/project-estimates', require('./routes/projectEstimates'));
-app.use('/api/designs', require('./routes/designs'));
-app.use('/api/design-rooms', require('./routes/designRooms'));
-app.use('/api/furniture', require('./routes/furniture'));
-app.use('/api/palettes', require('./routes/palettes'));
-app.use('/api/styles', require('./routes/styles'));
-app.use('/api/materials', require('./routes/materials'));
-app.use('/api/contractors', require('./routes/contractors'));
-app.use('/api/templates', require('./routes/templates'));
-app.use('/api/inspirations', require('./routes/inspirations'));
-app.use('/api/ai', require('./routes/ai'));
-app.use('/api/ai-design', require('./routes/aiDesign'));
-app.use('/api/ar', require('./routes/ar'));
-app.use('/api/shopping', require('./routes/shopping'));
-app.use('/api/subscriptions', require('./routes/subscriptions'));
-app.use('/api/export', require('./routes/export'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-
-// Floor plan AI results endpoints
-app.use('/api/full-analyses', require('./routes/fullAnalyses'));
-app.use('/api/room-detections', require('./routes/roomDetections'));
-app.use('/api/home-staging', require('./routes/homeStaging'));
-app.use('/api/furniture-placements', require('./routes/furniturePlacements'));
-app.use('/api/maintenance-predictions', require('./routes/maintenancePredictions'));
-app.use('/api/energy-audits', require('./routes/energyAudits'));
-app.use('/api/home-inspections', require('./routes/homeInspections'));
-app.use('/api/layout-optimizations', require('./routes/layoutOptimizations'));
-app.use('/api/room-dimensions', require('./routes/roomDimensions'));
-// Apply pass 5 — backlog extensions (timelines, invoices, AR manifest, smart-home, collab, design-trends)
-app.use('/api', require('./routes/extensions'));
-app.use('/api/custom', require('./routes/customFeatures'));
-app.use('/api/custom-views', require('./routes/customViews'));
-app.use('/api/bin-replenishment-queue', require('./routes/binReplenishmentQueue'));
-
-// Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', generatedRoutesEnabled, timestamp: new Date().toISOString() });
 });
 
-// // === Batch 09 Gaps & Frontend Mounts ===
-app.use('/api/gap-ai-aiwarehousemanager', require('./routes/batch09GapAi')); // // === Batch 09 Gaps & Frontend Mounts ===
-app.use('/api/gap-nonai-aiwarehousemanager', require('./routes/batch09GapNonai')); // // === Batch 09 Gaps & Frontend Mounts ===
+app.use('/api', auth);
+app.use('/api/governance', governanceRouter);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const legacyRoutes = [
+  ['/api/floor-plans', './routes/floorPlans'], ['/api/floor-plan-rooms', './routes/floorPlanRooms'],
+  ['/api/renovation-suggestions', './routes/renovationSuggestions'], ['/api/project-estimates', './routes/projectEstimates'],
+  ['/api/designs', './routes/designs'], ['/api/design-rooms', './routes/designRooms'],
+  ['/api/furniture', './routes/furniture'], ['/api/palettes', './routes/palettes'],
+  ['/api/styles', './routes/styles'], ['/api/materials', './routes/materials'],
+  ['/api/contractors', './routes/contractors'], ['/api/templates', './routes/templates'],
+  ['/api/inspirations', './routes/inspirations'], ['/api/shopping', './routes/shopping'],
+  ['/api/subscriptions', './routes/subscriptions'], ['/api/export', './routes/export'],
+  ['/api/admin', './routes/admin'], ['/api/dashboard', './routes/dashboard'],
+  ['/api/custom', './routes/customFeatures'], ['/api/custom-views', './routes/customViews'],
+  ['/api/bin-replenishment-queue', './routes/binReplenishmentQueue']
+];
+legacyRoutes.forEach(([mount, modulePath]) => app.use(mount, require(modulePath)));
+
+if (generatedRoutesEnabled) {
+  const generatedRoutes = [
+    ['/api/ai', './routes/ai'], ['/api/ai-design', './routes/aiDesign'], ['/api/ar', './routes/ar'],
+    ['/api/full-analyses', './routes/fullAnalyses'], ['/api/room-detections', './routes/roomDetections'],
+    ['/api/home-staging', './routes/homeStaging'], ['/api/furniture-placements', './routes/furniturePlacements'],
+    ['/api/maintenance-predictions', './routes/maintenancePredictions'], ['/api/energy-audits', './routes/energyAudits'],
+    ['/api/home-inspections', './routes/homeInspections'], ['/api/layout-optimizations', './routes/layoutOptimizations'],
+    ['/api/room-dimensions', './routes/roomDimensions']
+  ];
+  generatedRoutes.forEach(([mount, modulePath]) => app.use(mount, require(modulePath)));
+}
+
+app.use((req, res) => res.status(404).json({ error: 'not found' }));
+app.use((err, req, res, next) => {
+  console.error('Unhandled request error:', err.message);
+  res.status(500).json({ error: 'internal server error' });
 });
 
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

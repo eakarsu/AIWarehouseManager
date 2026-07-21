@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Sparkles, Mail, KeyRound, User } from 'lucide-react';
+import { Building2, Mail, KeyRound, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as api from '../services/api';
 
@@ -28,8 +28,8 @@ const Login = () => {
         toast.success('Welcome back!');
         navigate('/');
       } else {
-        if (password.length < 6) {
-          setError('Password must be at least 6 characters');
+        if (password.length < 12) {
+          setError('Password must be at least 12 characters');
           setLoading(false);
           return;
         }
@@ -45,19 +45,6 @@ const Login = () => {
       setError(err.response?.data?.error || (isLogin ? 'Login failed' : 'Registration failed'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fillDemoCredentials = async () => {
-    try {
-      const res = await api.demoCredentials();
-      setEmail(res.data.email);
-      setPassword(res.data.password);
-      toast.success('Demo credentials filled');
-    } catch {
-      setEmail('demo@aiinterior.com');
-      setPassword('demo123456');
-      toast.success('Demo credentials filled');
     }
   };
 
@@ -144,9 +131,9 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
-                  placeholder={isLogin ? 'Enter your password' : 'At least 6 characters'}
+                  placeholder={isLogin ? 'Enter your password' : 'At least 12 characters'}
                   required
-                  minLength={isLogin ? undefined : 6}
+                  minLength={isLogin ? undefined : 12}
                 />
               </div>
             </div>
@@ -171,19 +158,6 @@ const Login = () => {
             </div>
           )}
 
-          {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <button
-              onClick={fillDemoCredentials}
-              className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition flex items-center justify-center gap-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              Fill Demo Credentials
-            </button>
-            <p className="text-center text-gray-500 text-sm mt-3">
-              Click to auto-fill demo account details
-            </p>
-          </div>
         </div>
       </div>
     </div>

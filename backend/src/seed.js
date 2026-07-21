@@ -4,6 +4,11 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
+if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') throw new Error('ALLOW_DESTRUCTIVE_SEED=true is required');
+for (const name of ['SEED_ADMIN_PASSWORD', 'SEED_EDITOR_PASSWORD', 'SEED_DEMO_PASSWORD']) {
+  if (!process.env[name]) throw new Error(`${name} is required`);
+}
+
 async function main() {
   console.log('🌱 Starting database seed...\n');
 
@@ -47,9 +52,9 @@ async function main() {
   // 1. Users (3)
   // ============================================================
   console.log('Seeding users...');
-  const adminPassword = await bcrypt.hash('Admin123!@#', 10);
-  const editorPassword = await bcrypt.hash('Editor123!@#', 10);
-  const demoPassword = await bcrypt.hash('Demo123!@#', 10);
+  const adminPassword = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 12);
+  const editorPassword = await bcrypt.hash(process.env.SEED_EDITOR_PASSWORD, 12);
+  const demoPassword = await bcrypt.hash(process.env.SEED_DEMO_PASSWORD, 12);
 
   const adminUser = await prisma.user.create({
     data: {
@@ -348,10 +353,7 @@ async function main() {
 
   // ============================================================
   console.log('\nSeeding complete!');
-  console.log('---');
-  console.log('Demo account: demo@example.com / Demo123!@#');
-  console.log('Admin account: admin@example.com / Admin123!@#');
-  console.log('Editor account: editor@example.com / Editor123!@#');
+  console.log('Seed credentials were supplied through the environment.');
 }
 
 main()

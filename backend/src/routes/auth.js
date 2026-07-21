@@ -7,12 +7,12 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { auth, optionalAuth, adminOnly } = require('../middleware/auth');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Password strength validation
 function validatePasswordStrength(password) {
   const errors = [];
-  if (!password || password.length < 8) errors.push('Password must be at least 8 characters long');
+  if (!password || password.length < 12) errors.push('Password must be at least 12 characters long');
   if (!/[A-Z]/.test(password)) errors.push('Password must contain at least one uppercase letter');
   if (!/[a-z]/.test(password)) errors.push('Password must contain at least one lowercase letter');
   if (!/[0-9]/.test(password)) errors.push('Password must contain at least one number');
@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
       data: {
@@ -60,7 +60,9 @@ router.post('/register', async (req, res) => {
       select: { id: true, email: true, name: true, role: true, emailVerified: true, createdAt: true }
     });
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: String(user.id), email: user.email, role: user.role || 'warehouse_operator',
+      tenantId: process.env.GOVERNANCE_TENANT_ID, subjectIds: [`account:${user.id}`] }, JWT_SECRET,
+      { algorithm: 'HS256', expiresIn: '8h' });
 
     res.status(201).json({
       user,
@@ -92,7 +94,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: String(user.id), email: user.email, role: user.role || 'warehouse_operator',
+      tenantId: process.env.GOVERNANCE_TENANT_ID, subjectIds: [`account:${user.id}`] }, JWT_SECRET,
+      { algorithm: 'HS256', expiresIn: '8h' });
 
     res.json({
       user: {
@@ -181,7 +185,7 @@ router.put('/password', auth, async (req, res) => {
       return res.status(400).json({ error: 'New password too weak', details: passwordErrors });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
       where: { id: req.user.id },
       data: { password: hashedPassword }
@@ -240,10 +244,9 @@ router.post('/forgot-password', async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    console.log('\n========================================');
-    console.log('PASSWORD RESET LINK (dev mode):');
-    console.log(resetLink);
-    console.log('========================================\n');
+    if (process.env.NODE_ENV !== 'production' && process.env.LOG_RESET_LINKS === 'true') {
+      console.log(`Password reset requested; deliver through the configured notification provider: ${resetLink}`);
+    }
 
     res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
   } catch (error) {
@@ -283,7 +286,7 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Reset token has expired. Please request a new one.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     await prisma.user.update({
       where: { id: resetToken.userId },
       data: { password: hashedPassword }
@@ -325,14 +328,6 @@ router.post('/resend-verification', auth, async (req, res) => {
     console.error('Resend verification error:', error);
     res.status(500).json({ error: 'Failed to resend verification' });
   }
-});
-
-// Demo credentials
-router.get('/demo-credentials', (req, res) => {
-  res.json({
-    email: process.env.DEMO_EMAIL || 'demo@aiwarehouse.com',
-    password: process.env.DEMO_PASSWORD || 'Demo123456!'
-  });
 });
 
 module.exports = router;
