@@ -1,3 +1,4 @@
+import GeneratedAiResponse from '../GeneratedAiResponse';
 // // === Batch 09 Gaps & Frontend Mounts ===
 import React, { useState } from 'react';
 
@@ -43,9 +44,7 @@ export default function ArPreviewWithLiveFurniturePriceAvailabilityIntegratioPag
       </button>
       {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
       {result && (
-        <pre style={{ marginTop: 16, padding: 12, background: '#f4f4f4', borderRadius: 6, overflow: 'auto', maxHeight: 500 }}>
-{JSON.stringify(result, null, 2)}
-        </pre>
+        <GeneratedAiResponse response={result} />
       )}
     </div>
   );
