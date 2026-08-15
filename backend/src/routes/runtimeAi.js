@@ -29,7 +29,7 @@ async function complete(prompt) {
   if (!response.ok) throw new Error(body?.error?.message || `OpenRouter request failed (${response.status})`);
   const content = body?.choices?.[0]?.message?.content;
   if (typeof content !== 'string' || !content.trim()) throw new Error('OpenRouter returned an empty response');
-  const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  const cleaned = content.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   try { return { value: JSON.parse(cleaned), model: body.model, usage: body.usage }; }
   catch (_) { return { value: { analysis: cleaned }, model: body.model, usage: body.usage }; }
 }
