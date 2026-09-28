@@ -11,7 +11,22 @@ const Login = () => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const navigate = useNavigate();
+
+  const fillDemoCredentials = async () => {
+    setError('');
+    setDemoLoading(true);
+    try {
+      const response = await api.demoCredentials();
+      setEmail(response.data.email);
+      setPassword(response.data.password);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Demo credentials are unavailable');
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -140,12 +155,12 @@ const Login = () => {
 
             <button
               type="button"
-              onClick={() => { setEmail(import.meta.env.VITE_DEMO_EMAIL || ''); setPassword(import.meta.env.VITE_DEMO_PASSWORD || ''); }}
-              disabled={!import.meta.env.VITE_DEMO_EMAIL || !import.meta.env.VITE_DEMO_PASSWORD}
+              onClick={fillDemoCredentials}
+              disabled={loading || demoLoading}
               aria-label="Auto Fill Demo Credentials"
               style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: 'pointer' }}
             >
-              Auto Fill Demo Credentials
+              {demoLoading ? 'Loading Demo Credentials...' : 'Auto Fill Demo Credentials'}
             </button>
             <button
               type="submit"

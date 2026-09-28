@@ -9,6 +9,24 @@ const { auth, optionalAuth, adminOnly } = require('../middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Development convenience only. Credentials stay server-side and this route
+// is deliberately unavailable in production.
+router.get('/demo-credentials', (req, res) => {
+  const enabled = process.env.ENABLE_DEMO_CREDENTIAL_AUTOFILL !== 'false';
+  if (process.env.NODE_ENV === 'production' || !enabled) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  const email = process.env.DEMO_EMAIL || process.env.SEED_ADMIN_EMAIL || process.env.ADMIN_EMAIL || '';
+  const password = process.env.DEMO_PASSWORD || process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || '';
+  if (!email || !password) {
+    return res.status(503).json({ error: 'Demo credentials unavailable' });
+  }
+
+  res.set('Cache-Control', 'no-store');
+  return res.json({ email, password });
+});
+
 // Password strength validation
 function validatePasswordStrength(password) {
   const errors = [];
