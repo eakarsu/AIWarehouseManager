@@ -33,7 +33,7 @@ const FurnitureCatalog = () => {
       if (priceMin) params.priceMin = parseFloat(priceMin);
       if (priceMax) params.priceMax = parseFloat(priceMax);
       const res = await api.getFurniture(params);
-      setFurniture(res.data.furniture || res.data || []);
+      setFurniture(api.listRows(res.data, 'furniture'));
     } catch (err) {
       toast.error('Failed to load furniture');
     } finally {
@@ -45,7 +45,7 @@ const FurnitureCatalog = () => {
     const fetchCategories = async () => {
       try {
         const res = await api.getFurnitureCategories();
-        setCategories(res.data.categories || res.data || []);
+        setCategories(api.listRows(res.data, 'categories'));
       } catch {
         /* categories are optional */
       }
@@ -70,7 +70,7 @@ const FurnitureCatalog = () => {
   const handleAddToList = async (item) => {
     try {
       const res = await api.getShoppingLists();
-      setShoppingLists(res.data.shoppingLists || res.data || []);
+      setShoppingLists(api.listRows(res.data, 'shoppingLists'));
       setAddingToList(item);
     } catch (err) {
       toast.error('Failed to load shopping lists');

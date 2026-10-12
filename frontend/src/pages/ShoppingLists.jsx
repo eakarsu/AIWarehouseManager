@@ -22,7 +22,7 @@ const ShoppingLists = () => {
     setLoading(true);
     try {
       const res = await api.getShoppingLists();
-      const allLists = res.data.shoppingLists || res.data || [];
+      const allLists = api.listRows(res.data, 'shoppingLists');
       setLists(allLists);
 
       // Auto-select list from URL param

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
-import api from '../services/api';
+import * as api from '../services/api';
 import {
   Plus, Edit2, Trash2, Eye, Upload, FileImage, Loader2,
   Search, ArrowUpDown, Grid, List, X

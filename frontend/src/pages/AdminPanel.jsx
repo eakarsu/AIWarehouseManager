@@ -20,7 +20,7 @@ const AdminPanel = () => {
       const params = { page, limit };
       if (search) params.search = search;
       const res = await api.getAdminUsers(params);
-      setUsers(res.data.users || res.data || []);
+      setUsers(api.listRows(res.data, 'users'));
       setTotal(res.data.total || 0);
     } catch (err) {
       toast.error('Failed to load users');

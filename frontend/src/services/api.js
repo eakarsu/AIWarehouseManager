@@ -9,6 +9,15 @@ const api = axios.create({
   },
 });
 
+// Accept bare arrays and the list wrappers returned by the record routes.
+// An error object must never reach a page's map/filter/reduce calls.
+export const listRows = (payload, key) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.[key])) return payload[key];
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
 // Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -89,6 +98,17 @@ export const getEstimate = (id) => api.get(`/estimates/${id}`);
 export const createEstimate = (data) => api.post('/estimates', data);
 export const updateEstimate = (id, data) => api.put(`/estimates/${id}`, data);
 export const deleteEstimate = (id) => api.delete(`/estimates/${id}`);
+
+// Compatibility names used by the native record pages. These routes return
+// paginated { data, pagination } payloads.
+export const getFloorPlanRooms = (params) => api.get('/floor-plan-rooms', { params });
+export const createFloorPlanRoom = (data) => api.post('/floor-plan-rooms', data);
+export const updateFloorPlanRoom = (id, data) => api.put(`/floor-plan-rooms/${id}`, data);
+export const deleteFloorPlanRoom = (id) => api.delete(`/floor-plan-rooms/${id}`);
+export const getRenovationSuggestions = (params) => api.get('/renovation-suggestions', { params });
+export const createRenovationSuggestion = (data) => api.post('/renovation-suggestions', data);
+export const getProjectEstimates = (params) => api.get('/project-estimates', { params });
+export const createProjectEstimate = (data) => api.post('/project-estimates', data);
 
 // ============================================================
 // Designs CRUD (from AiInteriorDesign)
@@ -224,6 +244,20 @@ export const deleteFullAnalysis = (id) => api.delete(`/full-analyses/${id}`);
 export const getRoomDetections = () => api.get('/room-detections');
 export const getRoomDetection = (id) => api.get(`/room-detections/${id}`);
 export const deleteRoomDetection = (id) => api.delete(`/room-detections/${id}`);
+
+// Native AI screens use object payloads. Keep their historical method names
+// mapped to the corresponding configured routes.
+export const aiAnalyze = (data) => analyzeFloorPlan(data);
+export const aiOptimize = (data) => api.post('/ai/optimize', data);
+export const aiEstimate = (data) => api.post('/ai/estimate', data);
+export const aiSuggestions = (data) => api.post('/ai/suggestions', data);
+export const aiMaterials = (data) => api.post('/ai/materials', data);
+export const aiDetectRooms = (data) => detectRooms(data);
+export const aiHomeStaging = (data) => getHomeStagingAdvice(data);
+export const aiFurniturePlacement = (data) => placeFurniture(data);
+export const aiMaintenancePrediction = (data) => predictMaintenance(data);
+export const aiEnergyAudit = (data) => auditEnergy(data);
+export const aiHomeInspection = (data) => inspectHome(data);
 
 // AI Result Endpoints - Home Staging
 export const getHomeStagingList = () => api.get('/home-staging');

@@ -1,5 +1,6 @@
+import AIReport from '../components/AIReport';
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import * as api from '../services/api';
 import { Brain, Sparkles, Eye, Trash2, Loader2, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -112,8 +113,8 @@ export default function FullAnalysis() {
                   <p className="text-sm text-gray-500">{showDetail.model_used}</p>
                 </div>
               </div>
-              <div className="prose prose-sm max-w-none whitespace-pre-wrap border rounded-lg p-4 max-h-96 overflow-y-auto">
-                {showDetail.full_result || showDetail.layout_analysis || 'No data'}
+              <div className="max-h-96 overflow-y-auto">
+                <AIReport response={showDetail.full_result ?? showDetail.layout_analysis ?? 'No data'} title="Saved full analysis" model={showDetail.model_used} />
               </div>
             </div>
           </div>

@@ -25,7 +25,7 @@ const StylePresets = () => {
         if (filterRoom) params.roomType = filterRoom;
         if (search) params.search = search;
         const res = await api.getStyles(params);
-        setStyles(res.data.styles || res.data || []);
+        setStyles(api.listRows(res.data, 'styles'));
       } catch (err) {
         toast.error('Failed to load style presets');
       } finally {
@@ -44,7 +44,7 @@ const StylePresets = () => {
         if (filterRoom) params.roomType = filterRoom;
         if (search) params.search = search;
         const res = await api.getStyles(params);
-        setStyles(res.data.styles || res.data || []);
+        setStyles(api.listRows(res.data, 'styles'));
       } catch (err) {
         toast.error('Failed to load styles');
       } finally {

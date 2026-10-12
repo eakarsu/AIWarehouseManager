@@ -1,6 +1,7 @@
+import AIReport from '../components/AIReport';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import * as api from '../services/api';
 import {
   ArrowLeft, Brain, Loader2, Square, Lightbulb,
   Calculator, Maximize, RefreshCw, ScanSearch
@@ -56,7 +57,7 @@ export default function FloorPlanDetail() {
         type: type === 'full' ? 'Full Analysis' : type === 'detect_rooms' ? 'Room Detection' :
               type === 'optimize' ? 'Layout Optimization' : type === 'estimate' ? 'Cost Estimate' :
               type === 'suggestions' ? 'Suggestions' : type === 'materials' ? 'Materials' : 'Analysis',
-        content: response.data.analysis || response.data.optimization || response.data.estimate || response.data.result || JSON.stringify(response.data, null, 2),
+        content: response.data.analysis ?? response.data.optimization ?? response.data.estimate ?? response.data.result ?? response.data,
         model: response.data.model,
         processingTime: response.data.processingTimeMs
       });
@@ -196,7 +197,7 @@ export default function FloorPlanDetail() {
                 {aiResult.model && <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">{aiResult.model}</span>}
               </div>
               {aiResult.processingTime && <p className="text-sm text-gray-400 mb-4">Completed in {(aiResult.processingTime / 1000).toFixed(1)}s</p>}
-              <div className="prose prose-sm max-w-none whitespace-pre-wrap">{aiResult.content}</div>
+              <AIReport response={aiResult.content} title={aiResult.type} model={aiResult.model} />
             </div>
           )}
         </div>

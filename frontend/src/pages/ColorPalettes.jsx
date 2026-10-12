@@ -28,7 +28,7 @@ const ColorPalettes = () => {
       if (filterStyle) params.style = filterStyle;
       if (filterMood) params.mood = filterMood;
       const res = await api.getPalettes(params);
-      setPalettes(res.data.palettes || res.data || []);
+      setPalettes(api.listRows(res.data, 'palettes'));
     } catch (err) {
       toast.error('Failed to load palettes');
     } finally {

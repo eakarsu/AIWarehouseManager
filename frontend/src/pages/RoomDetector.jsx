@@ -1,6 +1,8 @@
+import NativeAIPresets from '../components/NativeAIPresets';
+import AIReport from '../components/AIReport';
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import api from '../services/api';
+import * as api from '../services/api';
 import { ScanSearch, Trash2, Plus, Loader2, Eye, Cpu, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -11,6 +13,7 @@ export default function RoomDetector() {
   const [analyzing, setAnalyzing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDetail, setShowDetail] = useState(null);
+  const [latestResult, setLatestResult] = useState(null);
   const [showConfirm, setShowConfirm] = useState(null);
   const [selectedFloorPlan, setSelectedFloorPlan] = useState('');
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -81,6 +84,7 @@ export default function RoomDetector() {
       }
       const response = await api.aiDetectRooms({ floor_plan_id: selectedFloorPlan || null, image_data: imageData });
       if (response.data.success !== false) {
+        setLatestResult(response.data);
         toast.success('Room detection completed!');
         setShowModal(false);
         setUploadedImage(null);
@@ -156,6 +160,8 @@ export default function RoomDetector() {
       )}
 
       {/* New Detection Modal */}
+      {latestResult !== null && <AIReport response={latestResult} title="Latest AI report" />}
+
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-lg">
@@ -166,6 +172,12 @@ export default function RoomDetector() {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Floor Plan</label>
+<NativeAIPresets disabled={analyzing} onFill={index => {
+                const plan = floorPlans.find(item => String(item.id) === String(selectedFloorPlan)) || floorPlans[index % floorPlans.length];
+                if (!plan) return 'Select or upload a real floor plan before generating. No record was invented.';
+                setSelectedFloorPlan(String(plan.id));
+                return 'A real floor plan was selected. Any uploaded image was preserved. Review the inputs before generating.';
+              }} />
                 <select value={selectedFloorPlan} onChange={(e) => setSelectedFloorPlan(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                   <option value="">Select a floor plan...</option>
@@ -238,9 +250,9 @@ export default function RoomDetector() {
                   <p className="font-medium">{new Date(showDetail.created_at).toLocaleString()}</p>
                 </div>
               </div>
-              {showDetail.full_result && (
+              {showDetail.full_result != null && (
                 <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
-                  <div className="prose prose-sm max-w-none whitespace-pre-wrap">{showDetail.full_result}</div>
+                  <div className="prose prose-sm max-w-none whitespace-pre-wrap"><AIReport response={showDetail.full_result} title="Saved AI report" /></div>
                 </div>
               )}
             </div>

@@ -1,6 +1,9 @@
+import AIReport from '../components/AIReport';
+
+import FullAIExamples, { useFullAIExamples } from "../components/FullAIExamples.jsx";
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import api from '../services/api';
+import * as api from '../services/api';
 import {
   Brain, Upload, Loader2, History, FileImage, Clock,
   Cpu, Sparkles, BarChart3, Maximize, Calculator
@@ -17,6 +20,8 @@ const analysisTypes = [
 ];
 
 export default function AIAnalysis() {
+  const fullAIExamples = useFullAIExamples();
+
   const [floorPlans, setFloorPlans] = useState([]);
   const [selectedFloorPlan, setSelectedFloorPlan] = useState('');
   const [selectedType, setSelectedType] = useState('full');
@@ -109,7 +114,7 @@ export default function AIAnalysis() {
 
       setAiResult({
         type: typeInfo.name,
-        content: response.data.analysis || response.data.optimization || response.data.estimate || response.data.result || JSON.stringify(response.data, null, 2),
+        content: response.data.analysis ?? response.data.optimization ?? response.data.estimate ?? response.data.result ?? response.data,
         model: response.data.model,
         processingTime: response.data.processingTimeMs
       });
@@ -128,11 +133,11 @@ export default function AIAnalysis() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
+    return <div className="flex items-center justify-center h-64" data-full-ai-workspace="AIAnalysis"><FullAIExamples controller={fullAIExamples} disabled={Boolean(loading || analyzing)} /><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-full-ai-workspace="AIAnalysis"><FullAIExamples controller={fullAIExamples} disabled={Boolean(loading || analyzing)} />
       <div>
         <h1 className="text-3xl font-bold text-gray-800">AI Analysis</h1>
         <p className="text-gray-500 mt-1">Analyze floor plans using AI-powered insights</p>
@@ -147,7 +152,7 @@ export default function AIAnalysis() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Choose Existing</label>
                 <select value={selectedFloorPlan} onChange={(e) => { setSelectedFloorPlan(e.target.value); if (e.target.value) setImageData(''); }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" data-full-ai-field={fullAIExamples.bind({ current: selectedFloorPlan, change: (e) => { setSelectedFloorPlan(e.target.value); }, label: "selectedFloorPlan", manual: false, json: false, sample: '' }, "p1-5998", undefined)}>
                   <option value="">Select a floor plan</option>
                   {floorPlans.map(fp => <option key={fp.id} value={fp.id}>{fp.name}</option>)}
                 </select>
@@ -215,7 +220,7 @@ export default function AIAnalysis() {
                 {aiResult.model && <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">{aiResult.model}</span>}
               </div>
               {aiResult.processingTime && <p className="text-sm text-gray-400 mb-4">Completed in {(aiResult.processingTime / 1000).toFixed(1)}s</p>}
-              <div className="prose prose-sm max-w-none whitespace-pre-wrap">{aiResult.content}</div>
+              <AIReport response={aiResult.content} title={aiResult.type} model={aiResult.model} />
             </div>
           )}
         </div>
@@ -235,6 +240,7 @@ export default function AIAnalysis() {
                   <div key={item.id} className="p-4 bg-gray-50 rounded-lg">
                     <p className="font-medium text-gray-800">{item.floor_plan_name || 'Analysis'}</p>
                     <p className="text-sm text-gray-500 capitalize">{item.analysis_type || 'Full'} Analysis</p>
+                    <details className="mt-2"><summary className="cursor-pointer text-sm font-medium text-indigo-700">View saved report</summary><AIReport response={item.full_result ?? item.layout_analysis ?? item.result ?? 'No data'} title="Saved analysis" model={item.model_used} /></details>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(item.created_at).toLocaleDateString()}</span>
                       {item.processing_time_ms && <span className="flex items-center gap-1"><Cpu className="h-3 w-3" />{(item.processing_time_ms / 1000).toFixed(1)}s</span>}

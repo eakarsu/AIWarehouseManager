@@ -37,7 +37,7 @@ const Inspirations = () => {
       if (filterRoom) params.roomType = filterRoom;
       if (search) params.search = search;
       const res = await api.getInspirations(params);
-      setInspirations(res.data.inspirations || res.data || []);
+      setInspirations(api.listRows(res.data, 'inspirations'));
     } catch (err) {
       toast.error('Failed to load inspirations');
     } finally {

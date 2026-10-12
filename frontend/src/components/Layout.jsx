@@ -1,3 +1,4 @@
+import AIReportLibrary from "./AIReportLibrary";
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -258,7 +259,7 @@ export default function Layout({ children, user, onLogout }) {
             </button>
           )}
         </div>
-      </aside>
+      <AIReportLibrary /></aside>
 
       {/* Main content area */}
       <div

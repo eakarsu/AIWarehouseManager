@@ -1,5 +1,7 @@
+import NativeAIPresets from '../components/NativeAIPresets';
+import AIReport from '../components/AIReport';
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import * as api from '../services/api';
 import { Wrench, Trash2, Plus, Loader2, Eye, Calendar, AlertTriangle, DollarSign, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -10,6 +12,7 @@ export default function MaintenancePredictor() {
   const [analyzing, setAnalyzing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDetail, setShowDetail] = useState(null);
+  const [latestResult, setLatestResult] = useState(null);
   const [showConfirm, setShowConfirm] = useState(null);
   const [formData, setFormData] = useState({ floor_plan_id: '', home_age: 10 });
 
@@ -30,6 +33,7 @@ export default function MaintenancePredictor() {
     try {
       const response = await api.aiMaintenancePrediction(formData);
       if (response.data.success !== false) {
+        setLatestResult(response.data);
         toast.success('Maintenance prediction generated!');
         setShowModal(false);
         setFormData({ floor_plan_id: '', home_age: 10 });
@@ -94,6 +98,8 @@ export default function MaintenancePredictor() {
         </div>
       )}
 
+      {latestResult !== null && <AIReport response={latestResult} title="Latest AI report" />}
+
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-lg">
@@ -102,6 +108,13 @@ export default function MaintenancePredictor() {
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="h-5 w-5" /></button>
             </div>
             <div className="p-6 space-y-4">
+            <NativeAIPresets disabled={analyzing} onFill={index => {
+              const plan = floorPlans.find(item => String(item.id) === String(formData.floor_plan_id)) || floorPlans[index % floorPlans.length];
+              if (!plan) return 'No saved floor plan is available. Select a real record before generating.';
+              setFormData(current => ({ ...current, floor_plan_id: String(plan.id), home_age: [8, 24, 47][index] }));
+              return 'Example inputs filled. Review the real floor plan and optional fields before generating.';
+            }} />
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Floor Plan *</label>
                 <select value={formData.floor_plan_id} onChange={(e) => setFormData({ ...formData, floor_plan_id: e.target.value })}
@@ -169,8 +182,8 @@ export default function MaintenancePredictor() {
                   <p className="text-sm text-gray-500">Monthly</p>
                 </div>
               </div>
-              {showDetail.full_result && (
-                <div className="border rounded-lg p-4 max-h-96 overflow-y-auto prose prose-sm max-w-none whitespace-pre-wrap">{showDetail.full_result}</div>
+              {showDetail.full_result != null && (
+                <div className="border rounded-lg p-4 max-h-96 overflow-y-auto prose prose-sm max-w-none whitespace-pre-wrap"><AIReport response={showDetail.full_result} title="Saved AI report" /></div>
               )}
             </div>
           </div>

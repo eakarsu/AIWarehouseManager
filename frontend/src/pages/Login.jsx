@@ -157,10 +157,10 @@ const Login = () => {
               type="button"
               onClick={fillDemoCredentials}
               disabled={loading || demoLoading}
-              aria-label="Auto Fill Demo Credentials"
+              aria-label="Fill demo credentials"
               style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: 'pointer' }}
             >
-              {demoLoading ? 'Loading Demo Credentials...' : 'Auto Fill Demo Credentials'}
+              {demoLoading ? 'Loading Demo Credentials...' : 'Fill Demo Credentials'}
             </button>
             <button
               type="submit"

@@ -18,7 +18,7 @@ const MaterialsPage = () => {
       if (search) params.search = search;
       if (filterCategory) params.category = filterCategory;
       const res = await api.getMaterials(params);
-      setMaterials(res.data.materials || res.data || []);
+      setMaterials(api.listRows(res.data, 'materials'));
     } catch (err) {
       toast.error('Failed to load materials');
     } finally {
@@ -30,7 +30,7 @@ const MaterialsPage = () => {
     const fetchCategories = async () => {
       try {
         const res = await api.getMaterialCategories();
-        setCategories(res.data.categories || res.data || []);
+        setCategories(api.listRows(res.data, 'categories'));
       } catch { /* optional */ }
     };
     fetchCategories();

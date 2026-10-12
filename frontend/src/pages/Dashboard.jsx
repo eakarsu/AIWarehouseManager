@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import * as api from '../services/api';
 import {
   FileImage, Square, Lightbulb, Calculator, Brain,
   TrendingUp, ArrowRight, Package, Users, Palette,

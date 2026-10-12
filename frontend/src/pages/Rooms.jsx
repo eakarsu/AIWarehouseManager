@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import * as api from '../services/api';
 import { Plus, Edit2, Trash2, Search, Square, Loader2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 

@@ -1,6 +1,8 @@
+import NativeAIPresets from '../components/NativeAIPresets';
+import AIReport from '../components/AIReport';
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import api from '../services/api';
+import * as api from '../services/api';
 import { Maximize, Layout, Eye, Trash2, Upload, Loader2, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -57,7 +59,7 @@ export default function OptimizeLayout() {
       const response = await api.aiOptimize({ floor_plan_id: selectedFloorPlan || undefined, image_data: imageData || selectedFp?.image_data });
       setAiResult({
         type: 'Layout Optimization',
-        content: response.data.analysis || response.data.optimization || response.data.result || JSON.stringify(response.data, null, 2),
+        content: response.data.analysis ?? response.data.optimization ?? response.data.result ?? response.data,
         model: response.data.model,
         processingTime: response.data.processingTimeMs
       });
@@ -89,6 +91,12 @@ export default function OptimizeLayout() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Choose Existing</label>
+<NativeAIPresets disabled={analyzing} onFill={index => {
+                const plan = floorPlans.find(item => String(item.id) === String(selectedFloorPlan)) || floorPlans[index % floorPlans.length];
+                if (!plan) return 'Select or upload a real floor plan before generating. No record was invented.';
+                setSelectedFloorPlan(String(plan.id));
+                return 'A real floor plan was selected. Any uploaded image was preserved. Review the inputs before generating.';
+              }} />
             <select value={selectedFloorPlan} onChange={(e) => { setSelectedFloorPlan(e.target.value); if (e.target.value) setImageData(''); }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
               <option value="">Select a floor plan</option>
@@ -124,7 +132,7 @@ export default function OptimizeLayout() {
             <h3 className="text-lg font-semibold">{aiResult.type}</h3>
             {aiResult.model && <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">{aiResult.model}</span>}
           </div>
-          <div className="prose prose-sm max-w-none whitespace-pre-wrap">{aiResult.content}</div>
+          <AIReport response={aiResult.content} title={aiResult.type} model={aiResult.model} />
         </div>
       )}
 
@@ -173,7 +181,7 @@ export default function OptimizeLayout() {
               <h2 className="text-xl font-semibold">Optimization Details</h2>
               <button onClick={() => setShowDetail(null)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="h-5 w-5" /></button>
             </div>
-            <div className="p-6 prose prose-sm max-w-none whitespace-pre-wrap">{showDetail.full_result || 'No data'}</div>
+            <div className="p-6"><AIReport response={showDetail.full_result ?? 'No data'} title="Saved analysis" model={showDetail.model_used} /></div>
           </div>
         </div>
       )}

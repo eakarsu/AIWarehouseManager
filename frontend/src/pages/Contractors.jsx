@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import * as api from '../services/api';
 import { Plus, Edit2, Trash2, Search, Users, Loader2, Star, Phone, Mail, MapPin, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 

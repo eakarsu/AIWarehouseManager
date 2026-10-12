@@ -1,3 +1,6 @@
+
+import FullAIExamples, { useFullAIExamples } from "../components/FullAIExamples.jsx";
+import AIReport from "../components/AIReport";
 import { useState } from 'react';
 import { Loader2, Sparkles, AlertTriangle, Wrench, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -14,6 +17,8 @@ const TABS = [
 ];
 
 export default function AIMaterialContractor() {
+  const fullAIExamples = useFullAIExamples();
+
   const [tab, setTab] = useState('material-wear');
 
   const [wearForm, setWearForm] = useState({
@@ -136,7 +141,7 @@ export default function AIMaterialContractor() {
 
       {tab === 'material-wear' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
-          <form onSubmit={submitWear} className="space-y-4">
+          <form onSubmit={submitWear} className="space-y-4" data-full-ai-workspace="AIMaterialContractor"><FullAIExamples controller={fullAIExamples} />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Materials (comma-separated) *
@@ -147,7 +152,7 @@ export default function AIMaterialContractor() {
                 value={wearForm.materials}
                 onChange={(e) => setWearForm({ ...wearForm, materials: e.target.value })}
                 placeholder="Oak hardwood floor, quartz countertop, MDF cabinets"
-                disabled={wearLoading}
+                disabled={wearLoading} data-full-ai-field={fullAIExamples.bind({ current: wearForm.materials, change: (e) => setWearForm({ ...wearForm, materials: e.target.value }), label: "wearForm.materials", manual: false, json: false, sample: '' }, "p1-4795", undefined)}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,7 +163,7 @@ export default function AIMaterialContractor() {
                   value={wearForm.environment}
                   onChange={(e) => setWearForm({ ...wearForm, environment: e.target.value })}
                   placeholder="kitchen / bathroom / outdoor patio"
-                  disabled={wearLoading}
+                  disabled={wearLoading} data-full-ai-field={fullAIExamples.bind({ current: wearForm.environment, change: (e) => setWearForm({ ...wearForm, environment: e.target.value }), label: "wearForm.environment", manual: false, json: false, sample: '' }, "p1-5438", undefined)}
                 />
               </div>
               <div>
@@ -167,7 +172,7 @@ export default function AIMaterialContractor() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   value={wearForm.usage_intensity}
                   onChange={(e) => setWearForm({ ...wearForm, usage_intensity: e.target.value })}
-                  disabled={wearLoading}
+                  disabled={wearLoading} data-full-ai-field={fullAIExamples.bind({ current: wearForm.usage_intensity, change: (e) => setWearForm({ ...wearForm, usage_intensity: e.target.value }), label: "wearForm.usage_intensity", manual: false, json: false, sample: 'normal' }, "p1-5990", undefined)}
                 >
                   <option value="low">Low</option>
                   <option value="normal">Normal</option>
@@ -181,7 +186,7 @@ export default function AIMaterialContractor() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   value={wearForm.climate}
                   onChange={(e) => setWearForm({ ...wearForm, climate: e.target.value })}
-                  disabled={wearLoading}
+                  disabled={wearLoading} data-full-ai-field={fullAIExamples.bind({ current: wearForm.climate, change: (e) => setWearForm({ ...wearForm, climate: e.target.value }), label: "wearForm.climate", manual: false, json: false, sample: 'temperate' }, "p1-6729", undefined)}
                 >
                   <option value="temperate">Temperate</option>
                   <option value="humid">Humid</option>
@@ -197,7 +202,7 @@ export default function AIMaterialContractor() {
                   value={wearForm.notes}
                   onChange={(e) => setWearForm({ ...wearForm, notes: e.target.value })}
                   placeholder="e.g. pets, sun exposure"
-                  disabled={wearLoading}
+                  disabled={wearLoading} data-full-ai-field={fullAIExamples.bind({ current: wearForm.notes, change: (e) => setWearForm({ ...wearForm, notes: e.target.value }), label: "wearForm.notes", manual: false, json: false, sample: '' }, "p1-7505", undefined)}
                 />
               </div>
             </div>
@@ -221,9 +226,7 @@ export default function AIMaterialContractor() {
           {wearResult && (
             <div className="border rounded-lg p-4 bg-gray-50">
               <h3 className="font-semibold mb-2">Result</h3>
-              <pre className="text-xs whitespace-pre-wrap break-words">
-                {JSON.stringify(wearResult.result || wearResult, null, 2)}
-              </pre>
+              <AIReport response={wearResult.result ?? wearResult} />
             </div>
           )}
         </div>
@@ -231,7 +234,7 @@ export default function AIMaterialContractor() {
 
       {tab === 'contractor-match' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
-          <form onSubmit={submitMatch} className="space-y-4">
+          <form onSubmit={submitMatch} className="space-y-4" data-full-ai-workspace="AIMaterialContractor"><FullAIExamples controller={fullAIExamples} />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Job Description *</label>
               <textarea
@@ -240,7 +243,7 @@ export default function AIMaterialContractor() {
                 value={matchForm.job_description}
                 onChange={(e) => setMatchForm({ ...matchForm, job_description: e.target.value })}
                 placeholder="Renovate a 200 sqft kitchen, replace cabinets and countertops, install pendant lighting..."
-                disabled={matchLoading}
+                disabled={matchLoading} data-full-ai-field={fullAIExamples.bind({ current: matchForm.job_description, change: (e) => setMatchForm({ ...matchForm, job_description: e.target.value }), label: "matchForm.job_description", manual: false, json: false, sample: '' }, "p1-9279", undefined)}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -251,7 +254,7 @@ export default function AIMaterialContractor() {
                   value={matchForm.required_skills}
                   onChange={(e) => setMatchForm({ ...matchForm, required_skills: e.target.value })}
                   placeholder="cabinetry, electrical, tile"
-                  disabled={matchLoading}
+                  disabled={matchLoading} data-full-ai-field={fullAIExamples.bind({ current: matchForm.required_skills, change: (e) => setMatchForm({ ...matchForm, required_skills: e.target.value }), label: "matchForm.required_skills", manual: false, json: false, sample: '' }, "p1-9999", undefined)}
                 />
               </div>
               <div>
@@ -261,7 +264,7 @@ export default function AIMaterialContractor() {
                   value={matchForm.budget}
                   onChange={(e) => setMatchForm({ ...matchForm, budget: e.target.value })}
                   placeholder="$15,000 - $25,000"
-                  disabled={matchLoading}
+                  disabled={matchLoading} data-full-ai-field={fullAIExamples.bind({ current: matchForm.budget, change: (e) => setMatchForm({ ...matchForm, budget: e.target.value }), label: "matchForm.budget", manual: false, json: false, sample: '' }, "p1-10547", undefined)}
                 />
               </div>
               <div>
@@ -271,7 +274,7 @@ export default function AIMaterialContractor() {
                   value={matchForm.timeline}
                   onChange={(e) => setMatchForm({ ...matchForm, timeline: e.target.value })}
                   placeholder="4-6 weeks"
-                  disabled={matchLoading}
+                  disabled={matchLoading} data-full-ai-field={fullAIExamples.bind({ current: matchForm.timeline, change: (e) => setMatchForm({ ...matchForm, timeline: e.target.value }), label: "matchForm.timeline", manual: false, json: false, sample: '' }, "p1-11069", undefined)}
                 />
               </div>
               <div>
@@ -281,7 +284,7 @@ export default function AIMaterialContractor() {
                   value={matchForm.location}
                   onChange={(e) => setMatchForm({ ...matchForm, location: e.target.value })}
                   placeholder="Brooklyn, NY"
-                  disabled={matchLoading}
+                  disabled={matchLoading} data-full-ai-field={fullAIExamples.bind({ current: matchForm.location, change: (e) => setMatchForm({ ...matchForm, location: e.target.value }), label: "matchForm.location", manual: false, json: false, sample: '' }, "p1-11587", undefined)}
                 />
               </div>
             </div>
@@ -305,9 +308,7 @@ export default function AIMaterialContractor() {
           {matchResult && (
             <div className="border rounded-lg p-4 bg-gray-50">
               <h3 className="font-semibold mb-2">Result</h3>
-              <pre className="text-xs whitespace-pre-wrap break-words">
-                {JSON.stringify(matchResult.result || matchResult, null, 2)}
-              </pre>
+              <AIReport response={matchResult.result ?? matchResult} />
             </div>
           )}
         </div>

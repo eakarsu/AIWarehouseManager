@@ -40,7 +40,7 @@ const Designs = () => {
       if (filterRoom) params.roomType = filterRoom;
       if (search) params.search = search;
       const res = await api.getDesigns(params);
-      setDesigns(res.data.designs || res.data || []);
+      setDesigns(api.listRows(res.data, 'designs'));
     } catch (err) {
       toast.error('Failed to load designs');
     } finally {

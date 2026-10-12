@@ -62,6 +62,15 @@ if (generatedRoutesEnabled) {
   generatedRoutes.forEach(([mount, modulePath]) => app.use(mount, require(modulePath)));
 }
 
+
+// Advisory AI reports only; native execution and approval routes stay unchanged.
+const aiWorkspacePrisma = new (require('@prisma/client').PrismaClient)();
+const aiWorkspaceSupport = require("../aiWorkspaceAdapters.cjs");
+const aiWorkspaceDatabase = aiWorkspaceSupport.prismaQueryClient(aiWorkspacePrisma);
+app.use('/api/report-workspace', require("../aiWorkspace.cjs").createAIWorkspaceRouter({
+  pool: aiWorkspaceDatabase, authenticateToken: aiWorkspaceSupport.verifiedActorAuth(require("./middleware/auth.js").auth),
+  aiRateLimiter: aiWorkspaceSupport.createWorkspaceLimiter(), features: require("../aiWorkspaceFeatures.json"),
+}));
 app.use((req, res) => res.status(404).json({ error: 'not found' }));
 app.use((err, req, res, next) => {
   console.error('Unhandled request error:', err.message);
