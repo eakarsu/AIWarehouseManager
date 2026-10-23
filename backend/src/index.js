@@ -34,6 +34,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api', auth);
 app.use('/api/governance', governanceRouter);
 app.use('/api/runtime-ai', require('./routes/runtimeAi'));
+app.use('/api/feature-pack', require('./routes/featurePack').default);
 
 const legacyRoutes = [
   ['/api/floor-plans', './routes/floorPlans'], ['/api/floor-plan-rooms', './routes/floorPlanRooms'],
